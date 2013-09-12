@@ -15,6 +15,8 @@ enum {
 
 typedef UInt8 CCGridViewLayoutType;
 
+static const int kInvalidItemIndex = -1;
+
 @interface CCGridViewLayout : NSObject
 @property (nonatomic, readonly) CCGridViewLayoutType type;
 
@@ -37,7 +39,8 @@ typedef UInt8 CCGridViewLayoutType;
               minEdgeInsets:(UIEdgeInsets)minEdgeInsets
                centeredGrid:(BOOL)centeredGrid;
 - (void)rebaseWithItemCount:(NSInteger)itemCount inFrame:(CGRect)frame;
-
+- (NSInteger)itemIndexFromLocation:(CGPoint)location;
 - (NSInteger)numberOfCellsPerLine;
+- (CGRect)rectForCellAtIndex:(NSInteger)index;
 
 @end

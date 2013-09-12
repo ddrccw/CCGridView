@@ -41,7 +41,47 @@
 {
     _contentView = [[UIView alloc] initWithFrame:CGRectZero];
     [_contentView setBackgroundColor:[UIColor clearColor]];
+    _contentView.autoresizingMask = UIViewAutoresizingFlexibleTopMargin |
+                                    UIViewAutoresizingFlexibleRightMargin |
+                                    UIViewAutoresizingFlexibleBottomMargin |
+                                    UIViewAutoresizingFlexibleLeftMargin |
+                                    UIViewAutoresizingFlexibleWidth |
+                                    UIViewAutoresizingFlexibleHeight;
     [self addSubview:_contentView];
 }
 
+- (void)layoutSubviews {
+    _contentView.frame = self.bounds;
+}
+
 @end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -10,10 +10,11 @@
 
 static const NSInteger kTagOffset = 0x10;
 
-@interface CCGridView ()
+@interface CCGridView ()<UIGestureRecognizerDelegate>
 @property (retain, nonatomic) CCGridViewLayout *gridLayout;
 @property (retain, nonatomic) NSMutableSet *reusableCellsSet;
 @property (retain, nonatomic) NSMutableSet *visibleCellsSet;
+@property (nonatomic, retain) UITapGestureRecognizer *tapGestureRecognizer;
 
 @end
 
@@ -36,6 +37,14 @@ static const NSInteger kTagOffset = 0x10;
         [self setAutoresizesSubviews:NO];
         [self setBackgroundColor:[UIColor whiteColor]];
         [self setAlwaysBounceVertical:YES];
+        
+        _tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self
+                                                                        action:@selector(handleTapGestureRecognition:)];
+        [_tapGestureRecognizer setNumberOfTapsRequired:1];
+        [_tapGestureRecognizer setNumberOfTouchesRequired:1];
+        [_tapGestureRecognizer setDelegate:self];
+        [self addGestureRecognizer:_tapGestureRecognizer];
+
         self.layoutType = CCGridViewLayoutTypeVertical;
         self.cellSize = kCCGridViewDefaultCellSize;
         self.cellSpacing = 10;
@@ -65,8 +74,8 @@ static const NSInteger kTagOffset = 0x10;
 
 - (void)setDelegate:(id<CCGridViewDelegate>)delegate {
     [super setDelegate:delegate];
-    _gridViewDelegateRespondsTo.willSelectCell = [delegate respondsToSelector:@selector(gridView:willSelectCellAtIndexPath:)];
-    _gridViewDelegateRespondsTo.didSelectCell = [delegate respondsToSelector:@selector(gridView:didSelectCellAtIndexPath:)];
+    _gridViewDelegateRespondsTo.willSelectCell = [delegate respondsToSelector:@selector(gridView:willSelectCellAtIndex:)];
+    _gridViewDelegateRespondsTo.didSelectCell = [delegate respondsToSelector:@selector(gridView:didSelectCellAtIndex:)];
 }
 
 - (void)setDataSource:(id<CCGridViewDataSource>)dataSource {
@@ -128,7 +137,7 @@ static const NSInteger kTagOffset = 0x10;
     
     for(CCGridViewCell* visibleCell in visibleCellsSetCopy)
     {
-        visibleCell.frame = [self rectForCellAtIndex:visibleCell.index];
+        visibleCell.frame = [self.gridLayout rectForCellAtIndex:visibleCell.index - kTagOffset];
         if(CGRectIntersectsRect([visibleCell frame], [self bounds]) == NO) {
             [self throwCellInReusableQueue:visibleCell];
         }
@@ -170,31 +179,7 @@ static const NSInteger kTagOffset = 0x10;
 
 
 ////////////////////////////////////////////////////////////////////////////////
-#pragma mark - private -
-- (CGRect)rectForCellAtIndex:(NSInteger)index
-{
-    int idx = index - kTagOffset;
-    CGRect cellFrame = CGRectZero;
-    cellFrame.size = [self cellSize];
-    NSInteger numberOfCellsPerLine = [self.gridLayout numberOfCellsPerLine];
-    if (numberOfCellsPerLine) {
-        int row = 0;
-        int column = 0;
-        if(CCGridViewLayoutTypeVertical == self.layoutType) {
-            row = idx / numberOfCellsPerLine;
-            column = idx % numberOfCellsPerLine;
-        }
-        else if(CCGridViewLayoutTypeHorizontal == self.layoutType) {
-            column = idx / numberOfCellsPerLine;
-            row = idx % numberOfCellsPerLine;
-        }
-        
-        cellFrame.origin.x = CGRectGetMinX(self.gridLayout.contentFrame) + self.cellSpacing + column * (self.cellSize.width + self.cellSpacing);
-        cellFrame.origin.y = CGRectGetMinY(self.gridLayout.contentFrame) + self.cellSpacing + row * (self.cellSize.height + self.cellSpacing);
-    }
-    
-    return cellFrame;
-}
+#pragma mark - private API -
 
 - (void)throwCellsInReusableQueue:(NSSet*)cellsSet
 {
@@ -269,11 +254,30 @@ static const NSInteger kTagOffset = 0x10;
 - (void)insertCell:(CCGridViewCell *)cell forIndex:(NSInteger)index
 {
     cell.index = index + kTagOffset;
-    cell.frame = [self rectForCellAtIndex:cell.index];
+    cell.frame = [self.gridLayout rectForCellAtIndex:index];
 //    [cell setSelected:[_selectedCellsIndexPaths containsObject:indexPath]];
     [self insertSubview:cell atIndex:0];
     [_visibleCellsSet addObject:cell];
 }
 
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark - gesture
+- (void)handleTapGestureRecognition:(UITapGestureRecognizer *)tapGesture {
+    CGPoint locationTouch = [tapGesture locationInView:self];
+    NSInteger index = [self.gridLayout itemIndexFromLocation:locationTouch];
+
+    if (index != kInvalidItemIndex)
+    {
+        if (_gridViewDelegateRespondsTo.willSelectCell) {
+            [self.delegate gridView:self willSelectCellAtIndex:index];
+        }
+        
+//        [self selectCellAtIndexPath:[aCell __indexPath] animated:YES];
+        
+        if(_gridViewDelegateRespondsTo.didSelectCell) {
+            [self.delegate gridView:self didSelectCellAtIndex:index];
+        }
+    }
+}
 
 @end

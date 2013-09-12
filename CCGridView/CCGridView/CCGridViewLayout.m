@@ -91,13 +91,50 @@
     self.gridBounds = frame;
 }
 
+- (NSInteger)itemIndexFromLocation:(CGPoint)location {
+    int index = 0;
+    if (CCGridViewLayoutTypeVertical == self.type) {
+        CGPoint relativeLocation = CGPointMake(location.x - self.edgeInsets.left,
+                                               location.y - self.edgeInsets.top);
+        
+        int col = (int)(relativeLocation.x / (self.cellSize.width + self.cellSpacing));
+        int row = (int)(relativeLocation.y / (self.cellSize.height + self.cellSpacing));
+        index = col + row * [self numberOfCellsPerLine];
+        
+        if (index >= self.itemCount || index < 0) {
+            index = kInvalidItemIndex;
+        }
+        else {
+            CGPoint itemOrigin = [self originForItemAtIndex:index];
+            CGRect itemFrame = CGRectMake(itemOrigin.x,
+                                          itemOrigin.y,
+                                          self.cellSize.width,
+                                          self.cellSize.height);
+            
+            if (!CGRectContainsPoint(itemFrame, location)) {
+                index = kInvalidItemIndex;
+            }
+        }
+    }
+    
+    return index;
+}
+
 - (NSInteger)numberOfCellsPerLine {
     return [self numberOfCellsPerLineInContentSize:self.contentSize];
 }
 
+- (CGRect)rectForCellAtIndex:(NSInteger)index
+{
+    CGRect cellFrame = CGRectZero;
+    cellFrame.size = [self cellSize];
+    cellFrame.origin = [self originForItemAtIndex:index];
+    return cellFrame;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark - private -
-
 - (NSInteger)numberOfCellsPerLineInContentSize:(CGSize)contentSize {
     int numberOfCellsPerLine = 0;
     if (CCGridViewLayoutTypeVertical == self.type) {
@@ -109,6 +146,29 @@
     
     return numberOfCellsPerLine;
 }
+
+- (CGPoint)originForItemAtIndex:(NSInteger)index {
+    CGPoint origin = CGPointZero;
+    int numberOfCellsPerLine = [self numberOfCellsPerLine];
+    if (numberOfCellsPerLine > 0 && index >= 0) {
+        int row = 0;
+        int column = 0;
+        if(CCGridViewLayoutTypeVertical == self.type) {
+            row = index / numberOfCellsPerLine;
+            column = index % numberOfCellsPerLine;
+        }
+        else if(CCGridViewLayoutTypeHorizontal == self.type) {
+            column = index / numberOfCellsPerLine;
+            row = index % numberOfCellsPerLine;
+        }
+        
+        origin.x = CGRectGetMinX(self.contentFrame) + self.cellSpacing + column * (self.cellSize.width + self.cellSpacing);
+        origin.y = CGRectGetMinY(self.contentFrame) + self.cellSpacing + row * (self.cellSize.height + self.cellSpacing);
+    }
+    
+    return origin;
+}
+
 @end
 
 

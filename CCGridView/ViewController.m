@@ -9,7 +9,7 @@
 #import "ViewController.h"
 #import "CCGridView.h"
 
-@interface ViewController () <CCGridViewDataSource>
+@interface ViewController () <CCGridViewDataSource, CCGridViewDelegate>
 @property (nonatomic, retain) CCGridView *grid;
 @end
 
@@ -21,7 +21,8 @@
     _grid = [[CCGridView alloc] initWithLayoutType:CCGridViewLayoutTypeVertical];
     self.grid.frame = self.view.bounds;
     self.grid.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
-    self.grid.dataSource = self;;
+    self.grid.dataSource = self;
+    self.grid.delegate = self;
     self.grid.backgroundColor = [UIColor lightGrayColor];
     self.grid.cellSize = CGSizeMake(200, 300);
     self.grid.centerGrid = YES;
@@ -46,7 +47,8 @@
         lb.backgroundColor = [UIColor clearColor];
         lb.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
         lb.tag = 100;
-        [cell addSubview:lb];
+        [cell.contentView addSubview:lb];
+        cell.contentView.backgroundColor = [UIColor yellowColor];
         [lb release];
     }
    
@@ -54,6 +56,10 @@
     lb.text = [NSString stringWithFormat:@"cell index=%d", index];
     
     return cell;
- 
 }
+
+- (void)gridView:(CCGridView *)gridView didSelectCellAtIndex:(NSInteger)index {
+    NSLog(@"didselectCell=%d", index);
+}
+
 @end

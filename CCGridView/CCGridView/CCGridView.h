@@ -25,6 +25,7 @@ static CGSize const kCCGridViewDefaultCellSize = {50, 70};
 @class CCGridView;
 
 @protocol CCGridViewDelegate <UIScrollViewDelegate>
+@optional
 - (void)gridView:(CCGridView *)gridView willSelectCellAtIndex:(NSInteger)index;
 - (void)gridView:(CCGridView *)gridView didSelectCellAtIndex:(NSInteger)index;
 @end
