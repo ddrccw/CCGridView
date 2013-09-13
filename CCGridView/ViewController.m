@@ -25,7 +25,6 @@
     self.grid.delegate = self;
     self.grid.backgroundColor = [UIColor lightGrayColor];
     self.grid.cellSize = CGSizeMake(200, 300);
-    self.grid.centerGrid = YES;
     [self.view addSubview:self.grid];
     [self.grid reloadData];
 }

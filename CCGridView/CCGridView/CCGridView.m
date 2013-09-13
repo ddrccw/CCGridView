@@ -37,7 +37,7 @@ static const NSInteger kTagOffset = 0x10;
         [self setAutoresizesSubviews:NO];
         [self setBackgroundColor:[UIColor whiteColor]];
         [self setAlwaysBounceVertical:YES];
-        
+
         _tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self
                                                                         action:@selector(handleTapGestureRecognition:)];
         [_tapGestureRecognizer setNumberOfTapsRequired:1];
@@ -45,10 +45,11 @@ static const NSInteger kTagOffset = 0x10;
         [_tapGestureRecognizer setDelegate:self];
         [self addGestureRecognizer:_tapGestureRecognizer];
 
-        self.layoutType = CCGridViewLayoutTypeVertical;
-        self.cellSize = kCCGridViewDefaultCellSize;
-        self.cellSpacing = 10;
-        self.minEdgeInsets = UIEdgeInsetsMake(5, 5, 5, 5);
+        _layoutType = CCGridViewLayoutTypeVertical;
+        _centerGrid = YES;
+        _cellSize = kCCGridViewDefaultCellSize;
+        _cellSpacing = 10;
+        _minEdgeInsets = UIEdgeInsetsMake(5, 5, 5, 5);
 
     }
     return self;
