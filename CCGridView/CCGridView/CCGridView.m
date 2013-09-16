@@ -36,7 +36,6 @@ static const NSInteger kTagOffset = 0x10;
         
         [self setAutoresizesSubviews:NO];
         [self setBackgroundColor:[UIColor whiteColor]];
-        [self setAlwaysBounceVertical:YES];
 
         _tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self
                                                                         action:@selector(handleTapGestureRecognition:)];
@@ -59,6 +58,12 @@ static const NSInteger kTagOffset = 0x10;
     self = [self initWithFrame:CGRectZero];
     if (self) {
         self.layoutType = layoutType;
+        if (CCGridViewLayoutTypeVertical == layoutType) {
+            [self setAlwaysBounceVertical:YES];
+        }
+        else if (CCGridViewLayoutTypeHorizontal == layoutType) {
+            [self setAlwaysBounceHorizontal:YES];
+        }
     }
     return self;
 }
@@ -224,12 +229,13 @@ static const NSInteger kTagOffset = 0x10;
         
     }
     else if (CCGridViewLayoutTypeHorizontal == self.layoutType) {
-        NSInteger firstVisibleColumnIndex = floor((CGRectGetMinX(self.bounds) - CGRectGetMinX(gridContentFrame) - self.cellSpacing) / ([self cellSize].width) + self.cellSpacing);
-        if(firstVisibleColumnIndex<0)
+        NSInteger firstVisibleColumnIndex = floor((CGRectGetMinX(self.bounds) - CGRectGetMinX(gridContentFrame) - self.cellSpacing) / ([self cellSize].width + self.cellSpacing));
+        if(firstVisibleColumnIndex < 0)
             firstVisibleColumnIndex = 0;
 
-        NSInteger lastVisibleColumnIndex = floor((CGRectGetMaxX(self.bounds) - CGRectGetMinX(gridContentFrame)) / ([self cellSize].width + self.cellSpacing));
-
+        NSInteger lastVisibleColumnIndex = floor((CGRectGetMaxX(self.bounds) - CGRectGetMinX(gridContentFrame) - self.cellSpacing) / ([self cellSize].width + self.cellSpacing));
+        NSLog(@"bounds=%@", NSStringFromCGRect(self.bounds));
+        
         firstVisibleCellIndex = firstVisibleColumnIndex * numberOfCellsPerLine;
         cellIndexesRange = ((lastVisibleColumnIndex + 1) * numberOfCellsPerLine) - firstVisibleCellIndex;
     }

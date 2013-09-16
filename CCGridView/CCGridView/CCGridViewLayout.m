@@ -93,30 +93,33 @@
 
 - (NSInteger)itemIndexFromLocation:(CGPoint)location {
     int index = 0;
+    CGPoint relativeLocation = CGPointMake(location.x - self.edgeInsets.left,
+                                           location.y - self.edgeInsets.top);
+
+    int col = (int)(relativeLocation.x / (self.cellSize.width + self.cellSpacing));
+    int row = (int)(relativeLocation.y / (self.cellSize.height + self.cellSpacing));
     if (CCGridViewLayoutTypeVertical == self.type) {
-        CGPoint relativeLocation = CGPointMake(location.x - self.edgeInsets.left,
-                                               location.y - self.edgeInsets.top);
-        
-        int col = (int)(relativeLocation.x / (self.cellSize.width + self.cellSpacing));
-        int row = (int)(relativeLocation.y / (self.cellSize.height + self.cellSpacing));
         index = col + row * [self numberOfCellsPerLine];
-        
-        if (index >= self.itemCount || index < 0) {
-            index = kInvalidItemIndex;
-        }
-        else {
-            CGPoint itemOrigin = [self originForItemAtIndex:index];
-            CGRect itemFrame = CGRectMake(itemOrigin.x,
-                                          itemOrigin.y,
-                                          self.cellSize.width,
-                                          self.cellSize.height);
-            
-            if (!CGRectContainsPoint(itemFrame, location)) {
-                index = kInvalidItemIndex;
-            }
-        }
+    }
+    else if (CCGridViewLayoutTypeHorizontal == self.type) {
+        index = row + col * [self numberOfCellsPerLine];
     }
     
+    if (index >= self.itemCount || index < 0) {
+        index = kInvalidItemIndex;
+    }
+    else {
+        CGPoint itemOrigin = [self originForItemAtIndex:index];
+        CGRect itemFrame = CGRectMake(itemOrigin.x,
+                                      itemOrigin.y,
+                                      self.cellSize.width,
+                                      self.cellSize.height);
+        
+        if (!CGRectContainsPoint(itemFrame, location)) {
+            index = kInvalidItemIndex;
+        }
+    }
+
     return index;
 }
 

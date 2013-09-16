@@ -30,7 +30,7 @@
 }
 
 - (NSInteger)numberOfItemsInGridView:(CCGridView *)gridView {
-    return 110;
+    return 50;
 }
 
 - (CCGridViewCell *)gridView:(CCGridView *)gridView cellForItemAtIndex:(NSInteger)index {
