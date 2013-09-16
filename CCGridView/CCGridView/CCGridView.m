@@ -23,7 +23,7 @@ static const NSInteger kTagOffset = 0x10;
 - (void)dealloc {
     [_gridLayout release];
     [_reusableCellsSet release];
-    [_visibleCells release];
+    [_visibleCellsSet release];
     [super dealloc];
 }
 
@@ -183,6 +183,17 @@ static const NSInteger kTagOffset = 0x10;
     return [dequeuedCell autorelease];
 }
 
+- (NSArray *)visibleCells {
+    return [self.visibleCellsSet allObjects];
+}
+
+- (NSArray *)indexesForVisibleCells {
+    NSMutableArray *indexes = [NSMutableArray arrayWithCapacity:[self.visibleCellsSet count]];
+    [self.visibleCellsSet enumerateObjectsUsingBlock:^(CCGridViewCell *cell, BOOL *stop){
+        [indexes addObject:@(cell.index - kTagOffset)];
+    }];
+    return [NSArray arrayWithArray:indexes];
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark - private API -
@@ -201,7 +212,6 @@ static const NSInteger kTagOffset = 0x10;
 
 - (void)throwCellInReusableQueue:(CCGridViewCell *)cell
 {
-    NSLog(@"reuseCell index=%d", cell.index - kTagOffset);
     cell.index = NSIntegerMin;
     [cell removeFromSuperview];
     [_reusableCellsSet addObject:cell];

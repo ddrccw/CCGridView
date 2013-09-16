@@ -62,7 +62,7 @@ static CGSize const kCCGridViewDefaultCellSize = {50, 70};
 @property (nonatomic) UIEdgeInsets minEdgeInsets;                     // Default is (5, 5, 5, 5)
 
 @property (nonatomic, readonly) NSArray *visibleCells;
-//@property (nonatomic, readonly) NSArray *indexPathsForVisibleCells;
+@property (nonatomic, readonly) NSArray *indexesForVisibleCells;
 
 - (id)initWithLayoutType:(CCGridViewLayoutType)layoutType;
 
