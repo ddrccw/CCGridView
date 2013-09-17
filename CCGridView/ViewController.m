@@ -59,7 +59,10 @@
 
 - (void)gridView:(CCGridView *)gridView didSelectCellAtIndex:(NSInteger)index {
     NSLog(@"didselectCell=%d", index);
-    NSLog(@"visibleCells=%@, visibleIndexes=%@", self.grid.visibleCells, self.grid.indexesForVisibleCells);
+//    NSLog(@"visibleCells=%@, visibleIndexes=%@", self.grid.visibleCells, self.grid.indexesForVisibleCells);
+//    NSLog(@"visibleCellsAtIndexes=%@", [gridView visibleCellsAtIndexes:self.grid.indexesForVisibleCells]);
+    
+    [gridView reloadCellAtIndex:index withCellAnimation:CCGridViewCellAnimationLeft];
 }
 
 @end

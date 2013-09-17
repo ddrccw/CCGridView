@@ -9,6 +9,7 @@
 #import "CCGridView.h"
 
 static const NSInteger kTagOffset = 0x10;
+static const float kDefaultAnimationDuration = .25f;
 
 @interface CCGridView ()<UIGestureRecognizerDelegate>
 @property (retain, nonatomic) CCGridViewLayout *gridLayout;
@@ -128,6 +129,48 @@ static const NSInteger kTagOffset = 0x10;
     [self setNeedsLayout];
 }
 
+- (void)reloadCellAtIndex:(NSInteger)index withCellAnimation:(CCGridViewCellAnimation)cellAnimation {
+    __block CCGridViewCell *cell = [self visibleCellAtIndex:index];
+    if (!cell) return;
+
+    CGRect inFrame = cell.frame;
+    __block CGRect outFrame = CGRectZero;
+    if (CCGridViewCellAnimationNone == cellAnimation) {
+        [self throwCellInReusableQueue:cell];
+        cell = [self.dataSource gridView:self cellForItemAtIndex:index];
+        [self insertCell:cell forIndex:index];
+    }
+    else {
+        [UIView animateWithDuration:kDefaultAnimationDuration
+                              delay:0.
+                            options:UIViewAnimationOptionCurveEaseOut
+                         animations:^
+        {
+            outFrame = [self finalRectForRect:inFrame usingCellAnimation:cellAnimation];
+            cell.frame = outFrame;
+            cell.alpha = 0;
+        }completion:^(BOOL finished){
+            if (finished) {
+                [self throwCellInReusableQueue:cell];
+                cell = [self.dataSource gridView:self cellForItemAtIndex:index];
+                [self insertCell:cell forIndex:index];
+                cell.frame = outFrame;
+                cell.alpha = 0;
+                [UIView animateWithDuration:kDefaultAnimationDuration
+                                      delay:0.
+                                    options:UIViewAnimationOptionCurveEaseIn
+                                 animations:^
+                 {
+                     cell.frame = inFrame;
+                     cell.alpha = 1;
+                 }completion:^(BOOL finished){
+                     NSLog(@"%@", cell);
+                 }];
+            }
+        }];
+    }
+}
+
 - (void)layoutSubviews {
     [super layoutSubviews];
     
@@ -176,11 +219,33 @@ static const NSInteger kTagOffset = 0x10;
         }
         
         [dequeuedCell setAlpha:1.];
-        
-        NSLog(@"dequeuCellIdx=%d", dequeuedCell.index);
     }
     
     return [dequeuedCell autorelease];
+}
+
+- (CCGridViewCell *)visibleCellAtIndex:(NSInteger)index {
+    __block CCGridViewCell *cell = nil;
+    int itemCountInGridView = (_gridViewDataSourceRespondsTo.numberOfItems ?
+                               [self.dataSource numberOfItemsInGridView:self] :
+                               0);
+    
+    if (0 <= index && index < itemCountInGridView) {
+        [self.visibleCellsSet enumerateObjectsUsingBlock:^(CCGridViewCell *c, BOOL *stop){
+            if (c.index == (index + kTagOffset)) {
+                cell = c;
+                *stop = YES;
+            }
+        }];
+    }
+    
+    return [[cell retain] autorelease];
+}
+
+- (NSArray *)visibleCellsAtIndexes:(NSArray *)indexes {
+    return [self.visibleCells filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^(CCGridViewCell *cell, NSDictionary *bindings){
+        return [indexes containsObject:@(cell.index - kTagOffset)];
+    }]];
 }
 
 - (NSArray *)visibleCells {
@@ -244,8 +309,6 @@ static const NSInteger kTagOffset = 0x10;
             firstVisibleColumnIndex = 0;
 
         NSInteger lastVisibleColumnIndex = floor((CGRectGetMaxX(self.bounds) - CGRectGetMinX(gridContentFrame) - self.cellSpacing) / ([self cellSize].width + self.cellSpacing));
-        NSLog(@"bounds=%@", NSStringFromCGRect(self.bounds));
-        
         firstVisibleCellIndex = firstVisibleColumnIndex * numberOfCellsPerLine;
         cellIndexesRange = ((lastVisibleColumnIndex + 1) * numberOfCellsPerLine) - firstVisibleCellIndex;
     }
@@ -270,12 +333,55 @@ static const NSInteger kTagOffset = 0x10;
 
 - (void)insertCell:(CCGridViewCell *)cell forIndex:(NSInteger)index
 {
+    NSAssert(cell, @"inserted cell should not be nil!");
     cell.index = index + kTagOffset;
     cell.frame = [self.gridLayout rectForCellAtIndex:index];
 //    [cell setSelected:[_selectedCellsIndexPaths containsObject:indexPath]];
-    [self insertSubview:cell atIndex:0];
+    [self insertSubview:cell atIndex:index];
     [_visibleCellsSet addObject:cell];
 }
+
+- (CGRect)finalRectForRect:(CGRect)initRect usingCellAnimation:(CCGridViewCellAnimation)animation {
+    CGRect rect = initRect;
+    switch (animation) {
+        case CCGridViewCellAnimationTop:
+            rect.origin.y -= self.cellSize.height;
+            break;
+        case CCGridViewCellAnimationBottom:
+            rect.origin.y += self.cellSize.height;
+            break;
+        case CCGridViewCellAnimationLeft:
+            rect.origin.x -= self.cellSize.width;
+            break;
+        case CCGridViewCellAnimationRight:
+            rect.origin.x += self.cellSize.width;
+            break;
+        default:
+            break;
+    }
+    return rect;
+}
+
+//- (CGRect)finalRectForCellAtIndex:(CGRect)index usingCellAnimation:(CCGridViewCellAnimation)animation {
+//    CGRect rect = initRect;
+//    switch (animation) {
+//        case CCGridViewCellAnimationTop:
+//
+//            break;
+//        case CCGridViewCellAnimationBottom:
+//
+//            break;
+//        case CCGridViewCellAnimationLeft:
+//
+//            break;
+//        case CCGridViewCellAnimationRight:
+//
+//            break;
+//        default:
+//            break;
+//    }
+//    return rect;
+//}
 
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark - gesture

@@ -16,8 +16,7 @@ typedef enum {
     CCGridViewCellAnimationLeft,
     CCGridViewCellAnimationTop,
     CCGridViewCellAnimationBottom,
-    CCGridViewCellAnimationNone,
-    CCGridViewCellAnimationAutomatic = 100
+    CCGridViewCellAnimationNone
 } CCGridViewCellAnimation;
 
 static CGSize const kCCGridViewDefaultCellSize = {50, 70};
@@ -68,13 +67,14 @@ static CGSize const kCCGridViewDefaultCellSize = {50, 70};
 
 /** Reloading the GridView */
 - (void)reloadData;
+- (void)reloadCellAtIndex:(NSInteger)index withCellAnimation:(CCGridViewCellAnimation)cellAnimation;
 //- (void)reloadCellsAtIndexPaths:(NSArray *)indexPaths withCellAnimation:(CCGridViewCellAnimation)cellAnimation;
 //- (void)reloadSections:(NSIndexSet *)sections withCellAnimation:(CCGridViewCellAnimation)cellAnimation;
 
 /** Requesting cells */
 - (CCGridViewCell *)dequeueReusableCellWithIdentifier:(NSString *)identifier;
-//- (CCGridViewCell *)cellAtIndexPath:(NSIndexPath *)indexPath; // returns nil if cell is not visible.
-//- (NSArray *)visibleCellsAtIndexPaths:(NSArray *)indexPaths;
+- (CCGridViewCell *)visibleCellAtIndex:(NSInteger)index; // returns nil if cell is not visible.
+- (NSArray *)visibleCellsAtIndexes:(NSArray *)indexes;
 
 //@property (nonatomic, assign) BOOL allowsMultipleSelections;
 //
