@@ -30,7 +30,6 @@ static const int kInvalidItemIndex = -1;
 @property (nonatomic, readonly) CGRect gridBounds;
 @property (nonatomic, readonly) CGSize contentSize;
 
-@property (nonatomic, assign) NSInteger section, numberOfItems;
 @property (nonatomic, assign) CGRect contentFrame;
 
 - (void)setUpWithLayoutType:(CCGridViewLayoutType)type

@@ -60,10 +60,12 @@ static const float kDefaultAnimationDuration = .25f;
     if (self) {
         self.layoutType = layoutType;
         if (CCGridViewLayoutTypeVertical == layoutType) {
-            [self setAlwaysBounceVertical:YES];
+            self.alwaysBounceVertical = YES;
+            self.alwaysBounceHorizontal = NO;
         }
         else if (CCGridViewLayoutTypeHorizontal == layoutType) {
-            [self setAlwaysBounceHorizontal:YES];
+            self.alwaysBounceVertical = NO;
+            self.alwaysBounceHorizontal = YES;
         }
     }
     return self;
@@ -122,54 +124,6 @@ static const float kDefaultAnimationDuration = .25f;
     [self setContentSize:contentSize];
 }
 
-- (void)reloadData {
-    [self reloadContentSize];
-    [self throwCellsInReusableQueue:_visibleCellsSet];
-//    [_selectedCellsIndexPaths release], _selectedCellsIndexPaths = [[NSMutableArray alloc] init];
-    [self setNeedsLayout];
-}
-
-- (void)reloadCellAtIndex:(NSInteger)index withCellAnimation:(CCGridViewCellAnimation)cellAnimation {
-    __block CCGridViewCell *cell = [self visibleCellAtIndex:index];
-    if (!cell) return;
-
-    CGRect inFrame = cell.frame;
-    __block CGRect outFrame = CGRectZero;
-    if (CCGridViewCellAnimationNone == cellAnimation) {
-        [self throwCellInReusableQueue:cell];
-        cell = [self.dataSource gridView:self cellForItemAtIndex:index];
-        [self insertCell:cell forIndex:index];
-    }
-    else {
-        [UIView animateWithDuration:kDefaultAnimationDuration
-                              delay:0.
-                            options:UIViewAnimationOptionCurveEaseOut
-                         animations:^
-        {
-            outFrame = [self finalRectForRect:inFrame usingCellAnimation:cellAnimation];
-            cell.frame = outFrame;
-            cell.alpha = 0;
-        }completion:^(BOOL finished){
-            if (finished) {
-                [self throwCellInReusableQueue:cell];
-                cell = [self.dataSource gridView:self cellForItemAtIndex:index];
-                [self insertCell:cell forIndex:index];
-                cell.frame = outFrame;
-                cell.alpha = 0;
-                [UIView animateWithDuration:kDefaultAnimationDuration
-                                      delay:0.
-                                    options:UIViewAnimationOptionCurveEaseIn
-                                 animations:^
-                 {
-                     cell.frame = inFrame;
-                     cell.alpha = 1;
-                 }completion:^(BOOL finished){
-                     NSLog(@"%@", cell);
-                 }];
-            }
-        }];
-    }
-}
 
 - (void)layoutSubviews {
     [super layoutSubviews];
@@ -258,6 +212,129 @@ static const float kDefaultAnimationDuration = .25f;
         [indexes addObject:@(cell.index - kTagOffset)];
     }];
     return [NSArray arrayWithArray:indexes];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark - scroll
+- (void)scrollToItemAtIndex:(NSInteger)index
+                   animated:(BOOL)animated
+             scrollPosition:(CCGridViewScrollPosition)scrollPosition
+{
+    CGPoint contentOffsetForItem = CGPointZero;
+    CGRect itemRect = [self.gridLayout rectForCellAtIndex:index];
+    
+    if (CCGridViewLayoutTypeVertical == self.gridLayout.type) {
+        contentOffsetForItem.x = self.contentOffset.x;
+        
+        switch (scrollPosition) {
+            case CCGridViewScrollPositionAtTop:
+                contentOffsetForItem.y = CGRectGetMinY(itemRect) - self.gridLayout.cellSpacing;
+                break;
+            case CCGridViewScrollPositionAtMiddle:
+                contentOffsetForItem.y = floor(CGRectGetMidY(itemRect) - CGRectGetHeight(self.bounds) / 2.);
+                break;
+            case CCGridViewScrollPositionAtBottom:
+                contentOffsetForItem.y = CGRectGetMinY(itemRect) - (CGRectGetHeight(self.bounds) - CGRectGetHeight(itemRect)) + self.gridLayout.cellSpacing;
+                break;
+            default:
+                break;
+        }
+        
+        float maxOffsetY = self.contentSize.height - CGRectGetHeight(self.bounds);
+        if (contentOffsetForItem.y < 0) {
+            contentOffsetForItem.y = 0;
+        }
+        else if (contentOffsetForItem.y > maxOffsetY) {
+            contentOffsetForItem.y = maxOffsetY;
+        }
+    }
+    else {
+        contentOffsetForItem.y = self.contentOffset.y;
+        
+        switch (scrollPosition) {
+            case CCGridViewScrollPositionAtTop:
+                contentOffsetForItem.x = CGRectGetMinX(itemRect) - self.gridLayout.cellSpacing;
+                break;
+            case CCGridViewScrollPositionAtMiddle:
+                contentOffsetForItem.x = floor(CGRectGetMidX(itemRect) - CGRectGetWidth(self.bounds) / 2.);
+                break;
+            case CCGridViewScrollPositionAtBottom:
+                contentOffsetForItem.x = CGRectGetMinX(itemRect) - (CGRectGetWidth(self.bounds) - CGRectGetWidth(itemRect)) + self.gridLayout.cellSpacing;
+                break;
+            default:
+                break;
+        }
+        
+        float maxOffsetX = self.contentSize.width - CGRectGetWidth(self.bounds);
+        if (contentOffsetForItem.x < 0) {
+            contentOffsetForItem.x = 0;
+        }
+        else if (contentOffsetForItem.x > maxOffsetX) {
+            contentOffsetForItem.x = maxOffsetX;
+        }
+
+    }
+    
+    [self setContentOffset:contentOffsetForItem animated:animated];
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark - reload
+- (void)reloadData {
+    [self reloadContentSize];
+    [self throwCellsInReusableQueue:_visibleCellsSet];
+    //    [_selectedCellsIndexPaths release], _selectedCellsIndexPaths = [[NSMutableArray alloc] init];
+    [self setNeedsLayout];
+}
+
+- (void)reloadCellAtIndex:(NSInteger)index withCellAnimation:(CCGridViewCellAnimation)cellAnimation {
+    __block CCGridViewCell *cell = [self visibleCellAtIndex:index];
+    if (!cell) return;
+    
+    CGRect inFrame = cell.frame;
+    __block CGRect outFrame = CGRectZero;
+    if (CCGridViewCellAnimationNone == cellAnimation) {
+        [self throwCellInReusableQueue:cell];
+        cell = [self.dataSource gridView:self cellForItemAtIndex:index];
+        [self insertCell:cell forIndex:index];
+    }
+    else {
+        [UIView animateWithDuration:kDefaultAnimationDuration
+                              delay:0.
+                            options:UIViewAnimationOptionCurveEaseOut
+                         animations:^
+         {
+             outFrame = [self finalRectForRect:inFrame usingCellAnimation:cellAnimation];
+             cell.frame = outFrame;
+             cell.alpha = 0;
+         }completion:^(BOOL finished){
+             if (finished) {
+                 [self throwCellInReusableQueue:cell];
+                 cell = [self.dataSource gridView:self cellForItemAtIndex:index];
+                 [self insertCell:cell forIndex:index];
+                 cell.frame = outFrame;
+                 cell.alpha = 0;
+                 [UIView animateWithDuration:kDefaultAnimationDuration
+                                       delay:0.
+                                     options:UIViewAnimationOptionCurveEaseIn
+                                  animations:^
+                  {
+                      cell.frame = inFrame;
+                      cell.alpha = 1;
+                  }completion:^(BOOL finished){
+                      NSLog(@"%@", cell);
+                  }];
+             }
+         }];
+    }
+}
+
+- (void)reloadCellsAtIndexes:(NSArray *)indexes withCellAnimation:(CCGridViewCellAnimation)cellAnimation {
+    for (NSNumber *index in indexes) {
+        [self reloadCellAtIndex:[index intValue] withCellAnimation:cellAnimation];
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -361,27 +438,6 @@ static const float kDefaultAnimationDuration = .25f;
     }
     return rect;
 }
-
-//- (CGRect)finalRectForCellAtIndex:(CGRect)index usingCellAnimation:(CCGridViewCellAnimation)animation {
-//    CGRect rect = initRect;
-//    switch (animation) {
-//        case CCGridViewCellAnimationTop:
-//
-//            break;
-//        case CCGridViewCellAnimationBottom:
-//
-//            break;
-//        case CCGridViewCellAnimationLeft:
-//
-//            break;
-//        case CCGridViewCellAnimationRight:
-//
-//            break;
-//        default:
-//            break;
-//    }
-//    return rect;
-//}
 
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark - gesture

@@ -9,7 +9,12 @@
 #import "ViewController.h"
 #import "CCGridView.h"
 
+static const int kGridCellCount = 7;
+
 @interface ViewController () <CCGridViewDataSource, CCGridViewDelegate>
+{
+    BOOL reloaded_;
+}
 @property (nonatomic, retain) CCGridView *grid;
 @end
 
@@ -18,7 +23,7 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    _grid = [[CCGridView alloc] initWithLayoutType:CCGridViewLayoutTypeVertical];
+    _grid = [[CCGridView alloc] initWithLayoutType:CCGridViewLayoutTypeHorizontal];
     self.grid.frame = self.view.bounds;
     self.grid.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
     self.grid.dataSource = self;
@@ -27,10 +32,44 @@
     self.grid.cellSize = CGSizeMake(200, 300);
     [self.view addSubview:self.grid];
     [self.grid reloadData];
+    
+    
+    UIBarButtonItem *reloadSectionButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh
+                                                                                             target:self
+                                                                                             action:@selector(reload)];
+    UIBarButtonItem *scrollSectionButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAction
+                                                                                             target:self
+                                                                                             action:@selector(randomScroll)];
+
+    [[self navigationItem] setRightBarButtonItems:@[reloadSectionButtonItem, scrollSectionButtonItem]
+                                         animated:YES];
+    [reloadSectionButtonItem release];
+    [scrollSectionButtonItem release];
+}
+
+- (void)reload {
+    reloaded_ = !reloaded_;
+//    [self.grid reloadData];
+    
+    srand((unsigned)time(NULL));
+    int anime = rand() % (CCGridViewCellAnimationNone + 1);
+    NSLog(@"reloadCellsAtIndexes anime=%d", anime);
+
+    [self.grid reloadCellsAtIndexes:@[@1, @2, @3, @4] withCellAnimation:anime];
+}
+
+- (void)randomScroll {
+    srand((unsigned)time(NULL));
+    int index = rand() % kGridCellCount;
+    int positon = rand() % (CCGridViewScrollPositionAtBottom + 1);
+    NSLog(@"scrollToCellIndex=%d, position=%d", index, positon);
+    
+    [self.grid scrollToItemAtIndex:index animated:YES scrollPosition:positon];
+
 }
 
 - (NSInteger)numberOfItemsInGridView:(CCGridView *)gridView {
-    return 50;
+    return kGridCellCount;
 }
 
 - (CCGridViewCell *)gridView:(CCGridView *)gridView cellForItemAtIndex:(NSInteger)index {
@@ -52,7 +91,12 @@
     }
    
     lb = (UILabel *)[cell viewWithTag:100];
-    lb.text = [NSString stringWithFormat:@"cell index=%d", index];
+    if (reloaded_) {
+        lb.text = [NSString stringWithFormat:@"reloaded cell index=%d", index];
+    }
+    else {
+        lb.text = [NSString stringWithFormat:@"cell index=%d", index];
+    }
     
     return cell;
 }
@@ -61,8 +105,10 @@
     NSLog(@"didselectCell=%d", index);
 //    NSLog(@"visibleCells=%@, visibleIndexes=%@", self.grid.visibleCells, self.grid.indexesForVisibleCells);
 //    NSLog(@"visibleCellsAtIndexes=%@", [gridView visibleCellsAtIndexes:self.grid.indexesForVisibleCells]);
-    
-    [gridView reloadCellAtIndex:index withCellAnimation:CCGridViewCellAnimationLeft];
+    srand((unsigned)time(NULL));
+    int anime = rand() % (CCGridViewCellAnimationNone + 1);
+    NSLog(@"reloadCellAtIndex anime=%d", anime);
+    [gridView reloadCellAtIndex:index withCellAnimation:anime];
 }
 
 @end

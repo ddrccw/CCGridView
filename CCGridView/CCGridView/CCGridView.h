@@ -19,6 +19,13 @@ typedef enum {
     CCGridViewCellAnimationNone
 } CCGridViewCellAnimation;
 
+typedef enum{
+    CCGridViewScrollPositionAtTop,
+    CCGridViewScrollPositionAtMiddle,
+    CCGridViewScrollPositionAtBottom
+} CCGridViewScrollPosition;
+
+
 static CGSize const kCCGridViewDefaultCellSize = {50, 70};
 
 @class CCGridView;
@@ -68,13 +75,18 @@ static CGSize const kCCGridViewDefaultCellSize = {50, 70};
 /** Reloading the GridView */
 - (void)reloadData;
 - (void)reloadCellAtIndex:(NSInteger)index withCellAnimation:(CCGridViewCellAnimation)cellAnimation;
-//- (void)reloadCellsAtIndexPaths:(NSArray *)indexPaths withCellAnimation:(CCGridViewCellAnimation)cellAnimation;
-//- (void)reloadSections:(NSIndexSet *)sections withCellAnimation:(CCGridViewCellAnimation)cellAnimation;
+- (void)reloadCellsAtIndexes:(NSArray *)indexes withCellAnimation:(CCGridViewCellAnimation)cellAnimation;
 
 /** Requesting cells */
 - (CCGridViewCell *)dequeueReusableCellWithIdentifier:(NSString *)identifier;
 - (CCGridViewCell *)visibleCellAtIndex:(NSInteger)index; // returns nil if cell is not visible.
 - (NSArray *)visibleCellsAtIndexes:(NSArray *)indexes;
+
+/** scroll */
+- (void)scrollToItemAtIndex:(NSInteger)index
+                   animated:(BOOL)animated
+             scrollPosition:(CCGridViewScrollPosition)scrollPosition;
+
 
 //@property (nonatomic, assign) BOOL allowsMultipleSelections;
 //
@@ -86,7 +98,6 @@ static CGSize const kCCGridViewDefaultCellSize = {50, 70};
 ///** Returns the indexPaths for selected cells. */
 //- (NSArray *)indexPathsForSelectedCells;
 //
-//- (CGRect)rectForSection:(NSInteger)section;
 //- (CGRect)rectForItemAtIndexPath:(NSIndexPath *)indexPath;
 
 
