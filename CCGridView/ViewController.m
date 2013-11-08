@@ -9,7 +9,7 @@
 #import "ViewController.h"
 #import "CCGridView.h"
 
-static const int kGridCellCount = 7;
+static const int kGridCellCount = 50;
 
 @interface ViewController () <CCGridViewDataSource, CCGridViewDelegate>
 {
@@ -23,6 +23,10 @@ static const int kGridCellCount = 7;
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    if ([self respondsToSelector:@selector(edgesForExtendedLayout)]) {
+        self.edgesForExtendedLayout = UIRectEdgeNone;
+    }
+    
     _grid = [[CCGridView alloc] initWithLayoutType:CCGridViewLayoutTypeHorizontal];
     self.grid.frame = self.view.bounds;
     self.grid.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
@@ -46,6 +50,20 @@ static const int kGridCellCount = 7;
     [reloadSectionButtonItem release];
     [scrollSectionButtonItem release];
 }
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation
+{
+    return YES;
+}
+
+- (BOOL)shouldAutorotate {
+    return YES;
+}
+
+- (NSUInteger)supportedInterfaceOrientations {
+    return UIInterfaceOrientationMaskAll;
+}
+
 
 - (void)reload {
     reloaded_ = !reloaded_;
@@ -110,5 +128,6 @@ static const int kGridCellCount = 7;
     NSLog(@"reloadCellAtIndex anime=%d", anime);
     [gridView reloadCellAtIndex:index withCellAnimation:anime];
 }
+
 
 @end
